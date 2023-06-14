@@ -31,7 +31,7 @@ func (c *AuthController) InitializeAccount(w http.ResponseWriter, r *http.Reques
 	name := r.FormValue("user_name")
 
 	// Initialize the account
-	customer, err := c.AuthService.InitializeAccount(customerXID, name)
+	customer, _, err := c.AuthService.InitializeAccount(customerXID, name)
 	if err != nil {
 		http.Error(w, "Failed to initialize account", http.StatusInternalServerError)
 		return

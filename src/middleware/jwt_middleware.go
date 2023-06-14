@@ -3,12 +3,20 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"net/http"
 	"os"
 	"strings"
-
-	"github.com/dgrijalva/jwt-go"
 )
+
+// Define JWTClaimsContextKey as the key to access JWT claims in the context
+const JWTClaimsContextKey = "jwtClaims"
+
+// JWTClaims represents the claims in the JWT token
+type JWTClaims struct {
+	CustomerXID string `json:"customer_xid"`
+	jwt.StandardClaims
+}
 
 func JWTMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +33,7 @@ func JWTMiddleware(next http.Handler) http.Handler {
 		}
 
 		tokenString := strings.Split(authHeader, " ")[1]
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 			return []byte(secretKey), nil
 		})
 		if err != nil {
@@ -38,8 +46,14 @@ func JWTMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Add the token to the request context
-		ctx := context.WithValue(r.Context(), "token", token)
+		claims, ok := token.Claims.(*JWTClaims)
+		if !ok {
+			http.Error(w, "Invalid token claims", http.StatusUnauthorized)
+			return
+		}
+
+		// Add the claims to the request context
+		ctx := context.WithValue(r.Context(), JWTClaimsContextKey, claims)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
