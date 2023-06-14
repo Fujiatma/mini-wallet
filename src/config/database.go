@@ -29,10 +29,11 @@ func InitDB() {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	// ...
 	DB.AutoMigrate(
 		&models.Customer{},
 		&models.Wallet{},
-		// Tambahkan model-model lain yang perlu dimigrasi di sini
+		&models.Transaction{},
+		&models.Deposit{},
+		&models.Withdrawal{},
 	)
 }
