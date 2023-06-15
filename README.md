@@ -1,5 +1,7 @@
 # mini-wallet
-This project build with Golang  for managing a simple mini wallet
+* This project build with Golang 1.19 for managing a simple mini wallet
+* Using JWT for build/construct token
+* Using MySQL for the Database
 
 # Project Structure
 - main.go
