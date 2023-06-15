@@ -6,14 +6,12 @@ import (
 	"net/http"
 )
 
-// Response represents the JSON response structure
 type Response struct {
 	Status string      `json:"status"`
 	Data   interface{} `json:"data,omitempty"`
 	Error  string      `json:"error,omitempty"`
 }
 
-// ConstructResponse constructs and sends a JSON response
 func ConstructResponse(w http.ResponseWriter, status int, data interface{}, err error) {
 	response := Response{}
 
@@ -21,7 +19,6 @@ func ConstructResponse(w http.ResponseWriter, status int, data interface{}, err 
 		response.Status = "error"
 		response.Error = err.Error()
 
-		// Mengubah status menjadi StatusInternalServerError untuk error
 		status = http.StatusInternalServerError
 	} else {
 		response.Data = data

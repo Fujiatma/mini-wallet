@@ -50,17 +50,13 @@ func (r *WalletRepository) GetTransactionsByWalletID(walletID string) ([]models.
 }
 
 func (r *WalletRepository) CreateDeposit(deposit *models.Deposit) error {
-	// Memulai transaksi
 	tx := r.Db.Begin()
-
-	// Menyimpan deposit ke dalam database dengan transaksi
 	if err := tx.Create(deposit).Error; err != nil {
 		// Rollback transaksi jika terjadi error
 		tx.Rollback()
 		return err
 	}
 
-	// Menjalankan komit transaksi
 	if err := tx.Commit().Error; err != nil {
 		return err
 	}
@@ -76,7 +72,6 @@ func (r *WalletRepository) CreateWithdrawal(withdrawal *models.Withdrawal) error
 		return err
 	}
 
-	// Mengupdate saldo wallet setelah withdrawal
 	wallet := &models.Wallet{}
 	if err := tx.Where("id = ?", withdrawal.WalletID).First(wallet).Error; err != nil {
 		tx.Rollback()
@@ -101,14 +96,12 @@ func (r *WalletRepository) CreateWithdrawal(withdrawal *models.Withdrawal) error
 func (r *WalletRepository) UpdateWalletBalance(walletID string, newBalance int) error {
 	tx := r.Db.Begin()
 
-	// Mengambil wallet berdasarkan ID
 	wallet := &models.Wallet{}
 	if err := tx.Where("id = ?", walletID).First(wallet).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
 
-	// Mengupdate saldo wallet
 	wallet.Balance = newBalance
 	if err := tx.Save(wallet).Error; err != nil {
 		tx.Rollback()
@@ -120,16 +113,13 @@ func (r *WalletRepository) UpdateWalletBalance(walletID string, newBalance int) 
 }
 
 func (r *WalletRepository) CreateTransaction(transaction *models.Transaction) error {
-	// Membuat instance database transaction
 	tx := r.Db.Begin()
 
-	// Menyimpan transaksi ke dalam database
 	if err := tx.Create(transaction).Error; err != nil {
-		tx.Rollback() // Rollback transaction jika terjadi error
+		tx.Rollback()
 		return err
 	}
 
-	// Commit transaction jika tidak ada error
 	return tx.Commit().Error
 }
 
