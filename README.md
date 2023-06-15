@@ -1,6 +1,6 @@
 # mini-wallet
 * This project build with Golang 1.19 for managing a simple mini wallet
-* Using JWT for build/construct token
+* Using JWT for manage the token
 * Using MySQL for the Database
 * Using gorm
 
