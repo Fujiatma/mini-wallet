@@ -5,6 +5,11 @@ import (
 	"github.com/julo/mini-wallet/src/repositories"
 )
 
+type AuthServiceInterface interface {
+	InitializeAccount(customerXID string, name string) (*models.Customer, *models.Wallet, error)
+	GetCustomerByCustomerXID(customerXID string) (*models.Customer, error)
+}
+
 type AuthService struct {
 	CustomerRepository *repositories.CustomerRepository
 	WalletRepository   *repositories.WalletRepository
@@ -42,7 +47,6 @@ func (s *AuthService) InitializeAccount(customerXID string, name string) (*model
 		return nil, nil, err
 	}
 
-	// Menghubungkan wallet dengan customer
 	customer.Wallet = *wallet
 
 	return customer, wallet, nil

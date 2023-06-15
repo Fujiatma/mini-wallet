@@ -13,10 +13,10 @@ import (
 )
 
 type AuthController struct {
-	AuthService *services.AuthService
+	AuthService services.AuthServiceInterface
 }
 
-func NewAuthController(authService *services.AuthService) *AuthController {
+func NewAuthController(authService services.AuthServiceInterface) *AuthController {
 	return &AuthController{AuthService: authService}
 }
 
@@ -38,9 +38,8 @@ func (c *AuthController) InitializeAccount(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Generate the token
-	token := generateToken(customer)
+	token := GenerateToken(customer)
 
-	// Create the response
 	response := map[string]interface{}{
 		"token": token,
 	}
@@ -49,7 +48,7 @@ func (c *AuthController) InitializeAccount(w http.ResponseWriter, r *http.Reques
 
 }
 
-func generateToken(customer *models.Customer) string {
+func GenerateToken(customer *models.Customer) string {
 	// Load environment variables from .env file
 	err := godotenv.Load()
 	if err != nil {

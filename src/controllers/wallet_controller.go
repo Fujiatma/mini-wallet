@@ -11,11 +11,11 @@ import (
 )
 
 type WalletController struct {
-	WalletService   *services.WalletService
-	CustomerService *services.AuthService
+	WalletService   services.WalletServiceInterface
+	CustomerService services.AuthServiceInterface
 }
 
-func NewWalletController(walletService *services.WalletService, customerService *services.AuthService) *WalletController {
+func NewWalletController(walletService services.WalletServiceInterface, customerService services.AuthServiceInterface) *WalletController {
 	return &WalletController{
 		WalletService:   walletService,
 		CustomerService: customerService,
@@ -31,7 +31,6 @@ func (c *WalletController) getJWTClaims(r *http.Request) (*middleware.JWTClaims,
 }
 
 func (c *WalletController) EnableWalletController(w http.ResponseWriter, r *http.Request) {
-	// Mendapatkan klaim JWT dari konteks permintaan
 	claims, err := c.getJWTClaims(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -55,7 +54,6 @@ func (c *WalletController) EnableWalletController(w http.ResponseWriter, r *http
 		return
 	}
 
-	// Mengonstruksi response
 	response := map[string]interface{}{
 		"wallet": wallet,
 	}
@@ -64,14 +62,12 @@ func (c *WalletController) EnableWalletController(w http.ResponseWriter, r *http
 }
 
 func (c *WalletController) GetWalletBalanceController(w http.ResponseWriter, r *http.Request) {
-	// Mendapatkan klaim JWT dari konteks permintaan
 	claims, err := c.getJWTClaims(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	// Mendapatkan informasi saldo dompet
 	customer, err := c.CustomerService.GetCustomerByCustomerXID(claims.CustomerXID)
 	if err != nil {
 		if customErr, ok := err.(resp.WalletAlreadyDisabledError); ok && customErr.Code == 801 {
@@ -87,7 +83,6 @@ func (c *WalletController) GetWalletBalanceController(w http.ResponseWriter, r *
 		return
 	}
 
-	// Membangun respons
 	response := map[string]interface{}{
 		"wallet": customer.Wallet,
 	}
@@ -97,14 +92,12 @@ func (c *WalletController) GetWalletBalanceController(w http.ResponseWriter, r *
 }
 
 func (c *WalletController) GetWalletTransactionController(w http.ResponseWriter, r *http.Request) {
-	// Mendapatkan klaim JWT dari konteks permintaan
 	claims, err := c.getJWTClaims(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	// Mengambil transaksi wallet dari repository berdasarkan customerID
 	transactions, err := c.WalletService.GetWalletTransactions(claims.CustomerXID)
 	if err != nil {
 		if customErr, ok := err.(resp.WalletAlreadyDisabledError); ok && customErr.Code == 801 {
@@ -115,7 +108,6 @@ func (c *WalletController) GetWalletTransactionController(w http.ResponseWriter,
 		return
 	}
 
-	// Mengirimkan respons JSON dengan daftar transaksi wallet
 	response := struct {
 		Status string               `json:"status"`
 		Data   []models.Transaction `json:"data"`
@@ -128,18 +120,15 @@ func (c *WalletController) GetWalletTransactionController(w http.ResponseWriter,
 }
 
 func (c *WalletController) AddVirtualMoneyController(w http.ResponseWriter, r *http.Request) {
-	// Mendapatkan klaim JWT dari konteks permintaan
 	claims, err := c.getJWTClaims(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	// Membaca data deposit dari permintaan
 	amountStr := r.FormValue("amount")
 	referenceID := r.FormValue("reference_id")
 
-	// Memvalidasi jumlah deposit
 	amount, err := strconv.Atoi(amountStr)
 	if err != nil {
 		http.Error(w, "Invalid amount", http.StatusBadRequest)
@@ -150,7 +139,6 @@ func (c *WalletController) AddVirtualMoneyController(w http.ResponseWriter, r *h
 		return
 	}
 
-	// Melakukan penambahan virtual money ke wallet
 	deposit, err := c.WalletService.AddVirtualMoney(claims.CustomerXID, amount, referenceID)
 	if err != nil {
 		if customErr, ok := err.(resp.WalletAlreadyDisabledError); ok && customErr.Code == 801 {
@@ -161,7 +149,6 @@ func (c *WalletController) AddVirtualMoneyController(w http.ResponseWriter, r *h
 		return
 	}
 
-	// Mengirimkan respons JSON dengan data deposit
 	response := struct {
 		Status string          `json:"status"`
 		Data   *models.Deposit `json:"data"`
@@ -174,18 +161,15 @@ func (c *WalletController) AddVirtualMoneyController(w http.ResponseWriter, r *h
 }
 
 func (c *WalletController) UseVirtualMoneyController(w http.ResponseWriter, r *http.Request) {
-	// Mendapatkan klaim JWT dari konteks permintaan
 	claims, err := c.getJWTClaims(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	// Membaca data deposit dari permintaan
 	amountStr := r.FormValue("amount")
 	referenceID := r.FormValue("reference_id")
 
-	// Memvalidasi jumlah deposit
 	amount, err := strconv.Atoi(amountStr)
 	if err != nil {
 		http.Error(w, "Invalid amount", http.StatusBadRequest)
@@ -196,7 +180,6 @@ func (c *WalletController) UseVirtualMoneyController(w http.ResponseWriter, r *h
 		return
 	}
 
-	// Melakukan penggunaan virtual money dari wallet
 	withdrawal, err := c.WalletService.UseVirtualMoney(claims.CustomerXID, amount, referenceID)
 	if err != nil {
 		if customErr, ok := err.(resp.WalletAlreadyDisabledError); ok && customErr.Code == 801 {
@@ -207,7 +190,6 @@ func (c *WalletController) UseVirtualMoneyController(w http.ResponseWriter, r *h
 		return
 	}
 
-	// Mengirimkan respons JSON dengan data penarikan
 	response := struct {
 		Status string             `json:"status"`
 		Data   *models.Withdrawal `json:"data"`
@@ -220,24 +202,20 @@ func (c *WalletController) UseVirtualMoneyController(w http.ResponseWriter, r *h
 }
 
 func (c *WalletController) DisableWalletController(w http.ResponseWriter, r *http.Request) {
-	// Mendapatkan klaim JWT dari konteks permintaan
 	claims, err := c.getJWTClaims(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	// Mendapatkan data disable wallet dari body permintaan
 	isDisabled := r.FormValue("is_disabled")
 
-	// Melakukan validasi data disable wallet
 	isDisabledBool, err := strconv.ParseBool(isDisabled)
 	if err != nil {
 		http.Error(w, "Invalid value for is_disabled", http.StatusBadRequest)
 		return
 	}
 
-	// Menonaktifkan wallet
 	wallet, err := c.WalletService.DisableWallet(claims.CustomerXID, isDisabledBool)
 	if err != nil {
 		if customErr, ok := err.(resp.WalletAlreadyDisabledError); ok && customErr.Code == 801 {
@@ -248,7 +226,6 @@ func (c *WalletController) DisableWalletController(w http.ResponseWriter, r *htt
 		return
 	}
 
-	// Mengirimkan respons JSON dengan data wallet
 	response := struct {
 		Status string         `json:"status"`
 		Data   *models.Wallet `json:"data"`
